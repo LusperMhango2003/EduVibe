@@ -24,7 +24,7 @@ const Login = () => {
       };
 
       const res = await axios.post(
-        "http://192.168.6.128:3000/auth/login",
+        "http://localhost:3000/auth/login",
         userData,
         {
           headers: {

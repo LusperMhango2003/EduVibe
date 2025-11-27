@@ -37,7 +37,7 @@ const SignUp = () => {
       console.log("Sending data:", userData); // For debugging
 
       // ✅ Send as JSON (not FormData)
-      const res = await axios.post("http://192.168.6.128:3000/users", userData, {
+      const res = await axios.post("http://localhost:3000/users", userData, {
         headers: { 
           "Content-Type": "application/json" 
         },
