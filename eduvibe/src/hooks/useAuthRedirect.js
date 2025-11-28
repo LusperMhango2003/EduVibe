@@ -5,8 +5,11 @@ export const useAuthRedirect = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const handleAuthExpired = () => {
-      navigate('/login', { replace: true });
+    const handleAuthExpired = (event) => {
+      console.log('Auth expired event received');
+      setTimeout(() => {
+        navigate('/login', { replace: true });
+      }, 100);
     };
 
     window.addEventListener('auth:expired', handleAuthExpired);

@@ -2,57 +2,52 @@ import React, { useState } from "react";
 import flyerImage from "../assets/eduvibe.jpeg";
 import { FaGoogle, FaApple, FaEnvelope, FaLock, FaFacebook } from "react-icons/fa";
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
-import { Link } from "react-router-dom";
-import axios from "axios";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const Login = () => {
+  const navigate = useNavigate();
+  const { login } = useAuth();
   const [userPassword, setPassword] = useState("");
   const [userEmail, setEmail] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [message, setMessage] = useState(""); // For success/error messages
-  const [isError, setIsError] = useState(false); // To track if message is an error
+  const [message, setMessage] = useState("");
+  const [isError, setIsError] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsError(false);
     setMessage("");
+    setIsLoading(true);
 
     try {
-      const userData = {
-        userEmail: userEmail,
-        userPassword: userPassword,
-      };
+      // Use AuthContext login so app state updates
+      const result = await login(userEmail, userPassword);
+      console.log("🎉 Login result received:", result);
 
-      const res = await axios.post(
-        "http://localhost:3000/auth/login",
-        userData,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      // ✅ Check response body properly
-      if (res.data && (res.data.success || res.data.token)) {
-        setMessage("Login successful!");
-        setEmail("");
-        setPassword("");
-        // Example: Save token for later authenticated requests
-        if (res.data.token) {
-          localStorage.setItem("token", res.data.token);
-        }
-      } else {
-        const errorMsg = res.data?.message || "Invalid credentials";
-        setMessage(errorMsg);
-        setIsError(true);
-      }
+      // Set success message FIRST, then schedule redirect
+      const successMsg = "✅ Login successful! Your credentials are valid.";
+      setMessage(successMsg);
+      setIsError(false);
+      setIsLoading(false);  // Stop loading to show message
+      
+      console.log("✅ Message set to:", successMsg);
+      console.log("📍 Will redirect in 3 seconds...");
+      
+      // Keep message visible for 3 seconds before redirecting
+      setTimeout(() => {
+        console.log("🚀 Redirecting to /recordings now...");
+        navigate("/recordings", { replace: true });
+      }, 3000);
+      
     } catch (err) {
-      console.error("Error details:", err.response?.data);
-      const errorMessage =
-        err.response?.data?.message || "Failed to login. Please try again.";
+      console.error("Login error caught:", err?.message || err?.response?.data || err);
+      const errorMessage = err?.message || err?.response?.data?.message || "Failed to login. Please check credentials and try again.";
+      console.log("Setting error message:", errorMessage);
       setMessage(errorMessage);
       setIsError(true);
+      setIsLoading(false);
     }
   };
 
@@ -143,9 +138,10 @@ const Login = () => {
             {/* Login Button */}
             <button
               type="submit"
-              className="w-full bg-black text-white py-2 rounded-md font-semibold hover:bg-[#3442D9] transition"
+              disabled={isLoading}
+              className="w-full bg-black text-white py-2 rounded-md font-semibold hover:bg-[#3442D9] transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Log in
+              {isLoading ? "Logging in..." : "Log in"}
             </button>
 
             {/* Signup Link */}

@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import axios from 'axios';
 
 const AuthContext = createContext(null);
 
@@ -32,65 +33,78 @@ export const AuthProvider = ({ children }) => {
     setIsLoading(true);
     setError(null);
     try {
-      const apiBase = import.meta.env.VITE_API_URL || import.meta.env.REACT_APP_API_URL || 'http://localhost:3000/api';
-      const response = await fetch(`${apiBase}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
+      const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+      const loginUrl = `${apiBase}/auth/login`;
+      
+      // Send both common key names so the backend accepts either format
+      const payload = { email, password, userEmail: email, userPassword: password };
+      
+      console.log('🔐 AuthContext.login START');
+      console.log('📍 URL:', loginUrl);
+      console.log('📤 Payload:', payload);
+      
+      const resp = await axios.post(loginUrl, payload);
+      
+      console.log('✅ AuthContext.login SUCCESS');
+      console.log('📥 Response:', resp.data);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Login failed');
+      const authToken = resp.data?.token;
+      const userData = resp.data?.user;
+
+      // SECURITY NOTE: Role comes from backend (userData.role), not from user input.
+      // The backend MUST verify credentials and return the authoritative role.
+      if (authToken && userData) {
+        localStorage.setItem('authToken', authToken);
+        localStorage.setItem('user', JSON.stringify(userData));
+        setToken(authToken);
+        setUser(userData);
+        setIsAuthenticated(true);
+        console.log('💾 Token and user stored in localStorage');
+        return resp.data;
       }
 
-      const data = await response.json();
-      const { token: authToken, user: userData } = data;
-
-      localStorage.setItem('authToken', authToken);
-      localStorage.setItem('user', JSON.stringify(userData));
-      setToken(authToken);
-      setUser(userData);
-      setIsAuthenticated(true);
-
-      return data;
+      throw new Error('Invalid login response - missing token or user');
     } catch (err) {
-      setError(err.message);
-      throw err;
+      console.error('❌ AuthContext.login FAILED');
+      console.error('📡 Error details:', err?.response?.data || err.message);
+      const message = err?.response?.data?.message || err.message || 'Login failed';
+      setError(message);
+      throw new Error(message);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  const register = useCallback(async (email, password, name, role = 'STUDENT') => {
+  const register = useCallback(async (email, password, name) => {
     setIsLoading(true);
     setError(null);
     try {
-      const apiBase = import.meta.env.VITE_API_URL || import.meta.env.REACT_APP_API_URL || 'http://localhost:3000/api';
-      const response = await fetch(`${apiBase}/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, name, role }),
+      const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+      // IMPORTANT: Do NOT send role from frontend. Backend assigns default role (e.g. STUDENT).
+      const resp = await axios.post(`${apiBase}/auth/register`, {
+        email,
+        password,
+        name,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Registration failed');
+      const authToken = resp.data?.token;
+      const userData = resp.data?.user;
+
+      if (authToken && userData) {
+        localStorage.setItem('authToken', authToken);
+        localStorage.setItem('user', JSON.stringify(userData));
+        setToken(authToken);
+        setUser(userData);
+        setIsAuthenticated(true);
+        return resp.data;
       }
 
-      const data = await response.json();
-      const { token: authToken, user: userData } = data;
-
-      localStorage.setItem('authToken', authToken);
-      localStorage.setItem('user', JSON.stringify(userData));
-      setToken(authToken);
-      setUser(userData);
-      setIsAuthenticated(true);
-
-      return data;
+      throw new Error('Invalid registration response');
     } catch (err) {
-      setError(err.message);
-      throw err;
+      const message = err?.response?.data?.message || err.message || 'Registration failed';
+      setError(message);
+      throw new Error(message);
     } finally {
       setIsLoading(false);
     }

@@ -1,10 +1,12 @@
 import { FaEnvelope, FaLock, FaUser } from "react-icons/fa";
 import { useState } from "react";
+import { useNavigate } from 'react-router-dom';
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 import axios from "axios";
 import banner from "/src/assets/banner.svg";
 
 const SignUp = () => {
+  const navigate = useNavigate();
   const [gender, setGender] = useState("");
   const [userPassword, setUserPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -27,6 +29,7 @@ const SignUp = () => {
 
     try {
       // ✅ Create JSON object that matches your DTO exactly
+      // NOTE: We DO NOT send a role here. Backend assigns STUDENT role by default.
       const userData = {
         username: username,
         userEmail: userEmail,        // Matches DTO: userEmail
@@ -37,20 +40,23 @@ const SignUp = () => {
       console.log("Sending data:", userData); // For debugging
 
       // ✅ Send as JSON (not FormData)
-      const res = await axios.post("http://localhost:3000/users", userData, {
+    const apiUrl = import.meta.env.VITE_API_URL ;
+      const res = await axios.post(`${apiUrl}/users`, userData, {
         headers: { 
           "Content-Type": "application/json" 
         },
       });
       
       if (res.status === 201 || res.status === 200) {
-        setSuccess("Account created successfully!");  
+        setSuccess("Account created successfully!");
         // Clear form
         setUsername("");
         setUserEmail("");
         setUserPassword("");
         setConfirmPassword("");
         setGender("");
+        // Redirect user to login page after successful signup
+        navigate('/login', { replace: true });
       }
     } catch (err) {
       console.error("Error details:", err.response?.data);

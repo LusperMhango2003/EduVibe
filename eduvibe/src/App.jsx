@@ -3,8 +3,10 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ProtectedRoute, UnauthorizedPage } from './components/ProtectedRoute';
 import Recordings from './components/Recordings';
+import Login from './components/loginpage';
 import { USER_ROLES } from './utils/permissions';
 import { useAuthRedirect } from './hooks/useAuthRedirect';
+import SignUp from './components/signupage';
 
 const LoadingPage = () => (
   <div className="flex items-center justify-center h-screen bg-gray-50">
@@ -14,7 +16,7 @@ const LoadingPage = () => (
 
 function AppContent() {
   useAuthRedirect();
-  const { isLoading } = useAuth();
+  const { isLoading, isAuthenticated } = useAuth();
 
   if (isLoading) {
     return <LoadingPage />;
@@ -22,11 +24,13 @@ function AppContent() {
 
   return (
     <Routes>
-      {/* Public routes */}
-      {/*<Route path="/login" element={<LoginPage />} />*/}
+      <Route path="/login" element={<Login />} />
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
+      <Route path="/signup" element={<SignUp />} />
+      
 
-      {/* Protected routes */}
+
+
       <Route
         path="/recordings"
         element={
@@ -37,11 +41,9 @@ function AppContent() {
         }
       />
 
-      {/* Redirect root to recordings or login */}
-      <Route path="/" element={<Navigate to="/recordings" replace />} />
+      <Route path="/" element={isAuthenticated ? <Navigate to="/recordings" replace /> : <Navigate to="/login" replace />} />
 
-      {/* Catch all - redirect to recordings */}
-      <Route path="*" element={<Navigate to="/recordings" replace />} />
+      <Route path="*" element={isAuthenticated ? <Navigate to="/recordings" replace /> : <Navigate to="/login" replace />} />
     </Routes>
   );
 }
