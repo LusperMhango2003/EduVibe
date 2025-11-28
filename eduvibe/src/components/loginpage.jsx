@@ -27,18 +27,18 @@ const Login = () => {
       console.log("🎉 Login result received:", result);
 
       // Set success message FIRST, then schedule redirect
-      const successMsg = "✅ Login successful! Your credentials are valid.";
+      const successMsg = "Login successful! Your credentials are valid.";
       setMessage(successMsg);
       setIsError(false);
       setIsLoading(false);  // Stop loading to show message
       
-      console.log("✅ Message set to:", successMsg);
-      console.log("📍 Will redirect in 3 seconds...");
+      console.log("Message set to:", successMsg);
+      console.log("Will redirect in 3 seconds...");
       
       // Keep message visible for 3 seconds before redirecting
       setTimeout(() => {
         console.log("🚀 Redirecting to /recordings now...");
-        navigate("/recordings", { replace: true });
+        navigate("/homepage", { replace: true });
       }, 3000);
       
     } catch (err) {
