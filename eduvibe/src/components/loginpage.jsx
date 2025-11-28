@@ -37,7 +37,7 @@ const Login = () => {
       
       // Keep message visible for 3 seconds before redirecting
       setTimeout(() => {
-        console.log("🚀 Redirecting to /recordings now...");
+        console.log("🚀 Redirecting to /homepage now...");
         navigate("/homepage", { replace: true });
       }, 3000);
       
